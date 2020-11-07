@@ -185,7 +185,7 @@ public class Main {
     private static void debug(int level, String event, Process p, String additional, long simulatorTime){
         String message = "";
         if(level == 0){
-            message += "TIME: " + simulatorTime/1000000.0 + " EVENT: " + event + " ";
+            message += "TIME: " + simulatorTime/1000000.0 + " (" + simulatorTime + ") EVENT: " + event + " ";
             switch (event) {
                 case "NEW_PROCESS" -> message += additional;
                 case "READY_TO_CPU" -> message += "PID: "
