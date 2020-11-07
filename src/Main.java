@@ -85,7 +85,7 @@ public class Main {
                     if (cpu.size() == 0)
                         eventQueue.add(new Event("READY_TO_CPU", simulatorTime + context_switch_time));
                     debug(0, "NEW_PROCESS", null, (pid - 1) + " total_cpu_time: " +
-                            total_cpu_time/1000000.0 + " " + (current_cpu_burst < 5000 ? "IO-Bound" : "CPU-Bound")
+                            total_cpu_time + " " + (current_cpu_burst < 5000 ? "IO-Bound" : "CPU-Bound")
                             + " nextProcessAt: " + new_process_creation_time / 1000000.0, simulatorTime);
                 }
                 case "READY_TO_CPU" -> {
@@ -145,7 +145,7 @@ public class Main {
                     currentProcess.setElapsedIOTime(currentProcess.getElapsedIOTime() + interruptTime);
                     currentProcess.setIoRequests(currentProcess.getIoRequests() + 1);
                     eventQueue.add(new Event("IO_COMPLETE", simulatorTime + interruptTime));
-                    debug(0, "IO_INTERRUPT", currentProcess, "" + (interruptTime/1000000.0), simulatorTime);
+                    debug(0, "IO_INTERRUPT", currentProcess, "" + interruptTime, simulatorTime);
                 }
                 case "IO_COMPLETE" -> {
                     currentProcess = ioQueue.remove();
@@ -189,14 +189,14 @@ public class Main {
             switch (event) {
                 case "NEW_PROCESS" -> message += additional;
                 case "READY_TO_CPU" -> message += "PID: "
-                        + p.getPID() + " currentBurst: " + p.getRemainingCPUBurst()/1000000.0 + " totalCPURem: "
-                        + p.getRemainingCPUTime()/1000000.0;
+                        + p.getPID() + " currentBurst: " + p.getRemainingCPUBurst() + " totalCPURem: "
+                        + p.getRemainingCPUTime();
                 case "CPU_SCHEDULER", "QUANTUM_EXP", "IO_COMPLETE" -> message += "PID: " + p.getPID();
                 case "IO_INTERRUPT" -> message += "PID: " + p.getPID() + " IO-Interrupt: " + additional;
                 case "PROCESS_DONE" -> message += "PID: " + p.getPID()
                         + " " + (p.isIoBound() ? "IO-Bound" : "CPU-Bound") + " totalCPU: " +
-                        p.getElapsedCPUTime()/1000000.0 + " waitReady: " + p.getElapsedQueueTime(simulatorTime)/1000000.0 +
-                        " IOTime: " + p.getElapsedIOTime()/1000000.0 + " IORequests: " + p.getIoRequests();
+                        p.getElapsedCPUTime() + " waitReady: " + p.getElapsedQueueTime(simulatorTime) +
+                        " IOTime: " + p.getElapsedIOTime() + " IORequests: " + p.getIoRequests();
             }
             System.out.println(message);
             try{
