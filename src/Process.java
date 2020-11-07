@@ -4,6 +4,7 @@ public class Process {
     private long remainingCPUBurst;
     private long elapsedCPUTime;
     private long elapsedIOTime;
+    private long elapsedQueueTime;
     private int ioRequests;
 
     private final int pid;
@@ -30,7 +31,12 @@ public class Process {
     }
 
     public long getElapsedQueueTime(long endTime) {
+        elapsedQueueTime = endTime - startTime - elapsedIOTime - elapsedCPUTime;
         return endTime - startTime - elapsedIOTime - elapsedCPUTime;
+    }
+
+    public long getElapsedQueueTime(){
+        return elapsedQueueTime;
     }
 
     public int getIoRequests() {

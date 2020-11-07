@@ -6,7 +6,7 @@ public class Main {
     private static Random r;
     private static FileWriter fr;
     private static BufferedWriter br;
-    private static final int DEBUG_LEVEL = 1;
+    private static final int DEBUG_LEVEL = 0;
 
     public static void main(String[] args){
         if(DEBUG_LEVEL == 0){
@@ -173,6 +173,7 @@ public class Main {
                     currentProcess = cpu.remove();
                     completedProcesses.push(currentProcess);
                     eventQueue.add(new Event("READY_TO_CPU", simulatorTime));
+                    currentProcess.getElapsedQueueTime(simulatorTime);
                     debug("PROCESS_DONE", currentProcess, "", simulatorTime);
                 }
             }
@@ -198,16 +199,56 @@ public class Main {
 
         System.out.println("\nTotal Number of processes completed: " + completedProcesses.size());
         int ioProcesses = 0;
-        long cpuTime = 0;
+        long cpuTime = 0, readyWait = 0;
         for (Process p : completedProcesses) {
             if (p.isIoBound())
                 ++ioProcesses;
-            System.out.println(p.getElapsedCPUTime());
             cpuTime += p.getElapsedCPUTime();
+            readyWait += p.getElapsedQueueTime();
         }
         System.out.println("Ratio of IO-Bound Completed: " + Math.round((double)ioProcesses/completedProcesses.size()*100.0) + "%");
         System.out.println("Average CPU Time: " + cpuTime/completedProcesses.size()/1000000.0 + " seconds");
+        System.out.println("Average Ready Waiting Time: " + readyWait/completedProcesses.size()/1000000.0 + " seconds");
 
+        cpuTime = 0;
+        readyWait = 0;
+        long ioWait = 0;
+        int io = 0;
+        for (Process p : completedProcesses) {
+            if (p.isIoBound()){
+                cpuTime += p.getElapsedCPUTime();
+                readyWait += p.getElapsedQueueTime();
+                ioWait += p.getElapsedIOTime();
+                io += p.getIoRequests();
+            }
+        }
+        System.out.println("\nNumber of IO-bounded processes completed: " + ioProcesses);
+        System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+
+
+        cpuTime = 0;
+        readyWait = 0;
+        ioWait = 0;
+        io = 0;
+        for (Process p : completedProcesses) {
+            if (!p.isIoBound()){
+                cpuTime += p.getElapsedCPUTime();
+                readyWait += p.getElapsedQueueTime();
+                ioWait += p.getElapsedIOTime();
+                io += p.getIoRequests();
+            }
+        }
+        System.out.println("\nNumber of CPU-bounded processes completed: " + Math.abs(completedProcesses.size() - ioProcesses));
+        System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+
+
+        System.out.println("\nFinished Statistics Section!\nEnd of program");
     }
 
     private static int randomNumber(int startRange, int endRange){
@@ -250,7 +291,7 @@ public class Main {
                 case "PROCESS_DONE" -> {
                     message += "PID: " + p.getPID()
                         + " " + (p.isIoBound() ? "IO-Bound" : "CPU-Bound") + " totalCPU: " +
-                        p.getElapsedCPUTime() + " waitReady: " + p.getElapsedQueueTime(simulatorTime) +
+                        p.getElapsedCPUTime() + " waitReady: " + p.getElapsedQueueTime() +
                         " IOTime: " + p.getElapsedIOTime() + " IORequests: " + p.getIoRequests();
                     System.out.println(message);
                 }
