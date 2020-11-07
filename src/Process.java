@@ -15,6 +15,9 @@ public class Process {
         this.remainingCPUTime = remainingCPUTime;
         this.remainingCPUBurst = remainingCPUBurst;
         this.ioBound = remainingCPUBurst < 5000;
+        this.elapsedCPUTime = 0;
+        this.elapsedIOTime = 0;
+        this.ioRequests = 0;
         this.startTime = startTime;
     }
 

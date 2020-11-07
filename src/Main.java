@@ -6,13 +6,16 @@ public class Main {
     private static Random r;
     private static FileWriter fr;
     private static BufferedWriter br;
+    private static final int DEBUG_LEVEL = 1;
 
     public static void main(String[] args){
-        try{
-            fr = new FileWriter("log.txt", true);
-            br = new BufferedWriter(fr);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(DEBUG_LEVEL == 0){
+            try{
+                fr = new FileWriter("log.txt", true);
+                br = new BufferedWriter(fr);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         r = new Random();
@@ -58,11 +61,17 @@ public class Main {
 
         long simulatorTime = 0;
         int pid = 0;
+
+        //Stat variables
+        long cpuTimeSum = 0;
+        int contextSwitches = 0;
+
         PriorityQueue<Event> eventQueue = new PriorityQueue<>(50,
                 Comparator.comparingLong(Event::getTime));
         Queue<Process> readyQueue = new LinkedList<>();
         Queue<Process> ioQueue = new LinkedList<>();
         Queue<Process> cpu = new LinkedList<>();
+        LinkedList<Process> completedProcesses = new LinkedList<>();
         Process currentProcess;
 
         eventQueue.add(new Event("NEW_PROCESS", 0));
@@ -75,6 +84,7 @@ public class Main {
                 case "NEW_PROCESS" -> {
                     long new_process_creation_time = (long) (randomExponentialNumber(avg_process_creation) + simulatorTime);
                     long total_cpu_time = (long) randomExponentialNumber(avg_process_length);
+                    cpuTimeSum+=total_cpu_time;
                     int current_cpu_burst;
                     if (randomNumber(1, 100) < percent_io_jobs)
                         current_cpu_burst = randomNumber(1000, 2000);
@@ -84,14 +94,15 @@ public class Main {
                     eventQueue.add(new Event("NEW_PROCESS", new_process_creation_time));
                     if (cpu.size() == 0)
                         eventQueue.add(new Event("READY_TO_CPU", simulatorTime + context_switch_time));
-                    debug(0, "NEW_PROCESS", null, (pid - 1) + " total_cpu_time: " +
+                    debug("NEW_PROCESS", null, "PID: " + (pid - 1) + " total_cpu_time: " +
                             total_cpu_time + " " + (current_cpu_burst < 5000 ? "IO-Bound" : "CPU-Bound")
                             + " nextProcessAt: " + new_process_creation_time / 1000000.0, simulatorTime);
                 }
                 case "READY_TO_CPU" -> {
+                    ++contextSwitches;
                     cpu.add(currentProcess = readyQueue.remove());
                     eventQueue.add(new Event("CPU_SCHEDULER", simulatorTime + context_switch_time));
-                    debug(0, "READY_TO_CPU", currentProcess, "", simulatorTime);
+                    debug("READY_TO_CPU", currentProcess, "", simulatorTime);
                 }
                 case "CPU_SCHEDULER" -> {
                     currentProcess = cpu.peek();
@@ -101,42 +112,43 @@ public class Main {
                     long timeSpent = 0;
                     long remainingBurst = currentProcess.getRemainingCPUBurst();
                     long remainingTime = currentProcess.getRemainingCPUTime();
-                    if(remainingBurst - quantum_size < 0){
-                        remainingTime -= remainingBurst;
 
-                        if(remainingTime > 0){
-                            timeSpent += remainingBurst;
-                            currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + remainingBurst);
-                        }else{
-                            timeSpent = remainingTime + remainingBurst;
-                            currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + remainingTime + remainingBurst);
-                        }
-                        remainingBurst = 0;
-                    }else{
-                        remainingTime -= quantum_size;
+                    debug("PRE", null, "PRE " + timeSpent + " ; " + remainingBurst + " ; " + remainingTime, simulatorTime);
+
+                    if(remainingBurst > quantum_size && remainingTime > quantum_size){
                         remainingBurst -= quantum_size;
+                        remainingTime -= quantum_size;
                         timeSpent += quantum_size;
-                        if(remainingTime > 0){
-                            currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + quantum_size);
+                    }else{
+                        if(remainingBurst > remainingTime){
+                            remainingBurst -= remainingTime;
+                            timeSpent += remainingTime;
+                            remainingTime = 0;
                         }else{
-                            currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + remainingTime + quantum_size);
+                            remainingTime -= remainingBurst;
+                            timeSpent += remainingBurst;
+                            remainingBurst = 0;
                         }
                     }
+
+                    debug("POST", null, "POST " + timeSpent + " ; " + remainingBurst + " ; " + remainingTime, simulatorTime);
+
                     currentProcess.setRemainingCPUBurst(remainingBurst);
                     currentProcess.setRemainingCPUTime(remainingTime);
+                    currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + timeSpent);
                     if(currentProcess.getRemainingCPUTime() <= 0)
                         eventQueue.add(new Event("PROCESS_DONE", simulatorTime + context_switch_time + timeSpent));
                     else if (currentProcess.getRemainingCPUBurst() <= 0)
                         eventQueue.add(new Event("IO_INTERRUPT", simulatorTime + timeSpent));
                     else
                         eventQueue.add(new Event("QUANTUM_EXP", simulatorTime + quantum_size));
-                    debug(0, "CPU_SCHEDULER", currentProcess, "", simulatorTime);
+                    debug("CPU_SCHEDULER", currentProcess, "", simulatorTime);
                 }
                 case "QUANTUM_EXP" -> {
                     currentProcess = cpu.remove();
                     readyQueue.add(currentProcess);
                     eventQueue.add(new Event("READY_TO_CPU", simulatorTime));
-                    debug(0, "QUANTUM_EXP", currentProcess, "", simulatorTime);
+                    debug("QUANTUM_EXP", currentProcess, "", simulatorTime);
                 }
                 case "IO_INTERRUPT" -> {
                     currentProcess = cpu.remove();
@@ -145,7 +157,7 @@ public class Main {
                     currentProcess.setElapsedIOTime(currentProcess.getElapsedIOTime() + interruptTime);
                     currentProcess.setIoRequests(currentProcess.getIoRequests() + 1);
                     eventQueue.add(new Event("IO_COMPLETE", simulatorTime + interruptTime));
-                    debug(0, "IO_INTERRUPT", currentProcess, "" + interruptTime, simulatorTime);
+                    debug("IO_INTERRUPT", currentProcess, "" + interruptTime, simulatorTime);
                 }
                 case "IO_COMPLETE" -> {
                     currentProcess = ioQueue.remove();
@@ -155,23 +167,46 @@ public class Main {
                     else
                         currentProcess.setRemainingCPUBurst(randomNumber(10000, 20000));
                     eventQueue.add(new Event("READY_TO_CPU", simulatorTime));
-                    debug(0, "IO_COMPLETE", currentProcess, "", simulatorTime);
+                    debug("IO_COMPLETE", currentProcess, "", simulatorTime);
                 }
                 case "PROCESS_DONE" -> {
+                    ++contextSwitches;
                     currentProcess = cpu.remove();
-                    debug(0, "PROCESS_DONE", currentProcess, "", simulatorTime);
+                    completedProcesses.push(currentProcess);
+                    debug("PROCESS_DONE", currentProcess, "", simulatorTime);
                 }
             }
         }
 
-        try{
-            br.close();
-            fr.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(DEBUG_LEVEL == 0){
+            try{
+                br.close();
+                fr.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        System.out.println("Finished Simulation!");
+        System.out.println("Finished Simulation!\n\nStatistics:");
+        System.out.println("Simulation Time: " + simulatorTime/1000000.0 + " seconds");
+        System.out.println("Created " + pid + " processes");
+        System.out.println("Average CPU Time: " + cpuTimeSum/pid/1000000.0 + " seconds");
+        System.out.println("CPU Utilization: " + Math.round((double)cpuTimeSum/simulatorTime*100.0) + "% ("
+                + cpuTimeSum/1000000.0 + " seconds)");
+        System.out.println("Total Time in Context Switches: " +
+                contextSwitches*context_switch_time/1000000.0 + " seconds"); // NEED TO CHECK THIS
+
+        System.out.println("\nTotal Number of processes completed: " + completedProcesses.size());
+        int ioProcesses = 0;
+        long cpuTime = 0;
+        for (Process p : completedProcesses) {
+            if (p.isIoBound())
+                ++ioProcesses;
+            System.out.println(p.getElapsedCPUTime());
+            cpuTime += p.getElapsedCPUTime();
+        }
+        System.out.println("Ratio of IO-Bound Completed: " + Math.round((double)ioProcesses/completedProcesses.size()*100.0) + "%");
+        System.out.println("Average CPU Time: " + cpuTime/completedProcesses.size()/1000000.0 + " seconds");
     }
 
     private static int randomNumber(int startRange, int endRange){
@@ -179,12 +214,12 @@ public class Main {
     }
 
     private static double randomExponentialNumber(int expected){
-        return -expected * Math.log(Math.random());
+        return -(double)expected * Math.log(Math.random());
     }
 
-    private static void debug(int level, String event, Process p, String additional, long simulatorTime){
+    private static void debug(String event, Process p, String additional, long simulatorTime){
         String message = "";
-        if(level == 0){
+        if(DEBUG_LEVEL == 0){
             message += "TIME: " + simulatorTime/1000000.0 + " (" + simulatorTime + ") EVENT: " + event + " ";
             switch (event) {
                 case "NEW_PROCESS" -> message += additional;
@@ -197,6 +232,7 @@ public class Main {
                         + " " + (p.isIoBound() ? "IO-Bound" : "CPU-Bound") + " totalCPU: " +
                         p.getElapsedCPUTime() + " waitReady: " + p.getElapsedQueueTime(simulatorTime) +
                         " IOTime: " + p.getElapsedIOTime() + " IORequests: " + p.getIoRequests();
+                default -> message += additional;
             }
             System.out.println(message);
             try{
@@ -204,6 +240,22 @@ public class Main {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }else if(DEBUG_LEVEL == 1){
+            message += "TIME: " + simulatorTime/1000000.0 + " (" + simulatorTime + ") EVENT: " + event + " ";
+            switch(event){
+                case "NEW_PROCESS" -> {
+                    message += additional;
+                    System.out.println(message);
+                }
+                case "PROCESS_DONE" -> {
+                    message += "PID: " + p.getPID()
+                        + " " + (p.isIoBound() ? "IO-Bound" : "CPU-Bound") + " totalCPU: " +
+                        p.getElapsedCPUTime() + " waitReady: " + p.getElapsedQueueTime(simulatorTime) +
+                        " IOTime: " + p.getElapsedIOTime() + " IORequests: " + p.getIoRequests();
+                    System.out.println(message);
+                }
+            }
+
         }
     }
 
