@@ -4,7 +4,6 @@ public class Process {
     private long remainingCPUBurst;
     private long elapsedCPUTime;
     private long elapsedIOTime;
-    private long elapsedQueueTime;
     private int ioRequests;
 
     private final int pid;
@@ -65,10 +64,6 @@ public class Process {
 
     public void setElapsedIOTime(long elapsedIOTime) {
         this.elapsedIOTime = elapsedIOTime;
-    }
-
-    public void setElapsedQueueTime(long elapsedQueueTime) {
-        this.elapsedQueueTime = elapsedQueueTime;
     }
 
     public void setIoRequests(int ioRequests) {
