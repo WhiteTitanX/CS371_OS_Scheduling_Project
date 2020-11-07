@@ -99,6 +99,8 @@ public class Main {
                             + " nextProcessAt: " + new_process_creation_time / 1000000.0, simulatorTime);
                 }
                 case "READY_TO_CPU" -> {
+                    if(cpu.size() > 0 || readyQueue.size() == 0)
+                        break;
                     ++contextSwitches;
                     cpu.add(currentProcess = readyQueue.remove());
                     eventQueue.add(new Event("CPU_SCHEDULER", simulatorTime + context_switch_time));
@@ -170,6 +172,7 @@ public class Main {
                     ++contextSwitches;
                     currentProcess = cpu.remove();
                     completedProcesses.push(currentProcess);
+                    eventQueue.add(new Event("READY_TO_CPU", simulatorTime));
                     debug("PROCESS_DONE", currentProcess, "", simulatorTime);
                 }
             }
@@ -204,6 +207,7 @@ public class Main {
         }
         System.out.println("Ratio of IO-Bound Completed: " + Math.round((double)ioProcesses/completedProcesses.size()*100.0) + "%");
         System.out.println("Average CPU Time: " + cpuTime/completedProcesses.size()/1000000.0 + " seconds");
+
     }
 
     private static int randomNumber(int startRange, int endRange){
@@ -219,7 +223,6 @@ public class Main {
         if(DEBUG_LEVEL == 0){
             message += "TIME: " + simulatorTime/1000000.0 + " (" + simulatorTime + ") EVENT: " + event + " ";
             switch (event) {
-                case "NEW_PROCESS" -> message += additional;
                 case "READY_TO_CPU" -> message += "PID: "
                         + p.getPID() + " currentBurst: " + p.getRemainingCPUBurst() + " totalCPURem: "
                         + p.getRemainingCPUTime();
