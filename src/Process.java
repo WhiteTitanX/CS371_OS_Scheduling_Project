@@ -9,13 +9,14 @@ public class Process {
 
     private final int pid;
     private final boolean ioBound;
-    private long startTime;
+    private final long startTime;
 
-    public Process(int pid, long remainingCPUTime, int remainingCPUBurst) {
+    public Process(int pid, long remainingCPUTime, int remainingCPUBurst, long startTime) {
         this.pid = pid;
         this.remainingCPUTime = remainingCPUTime;
         this.remainingCPUBurst = remainingCPUBurst;
         this.ioBound = remainingCPUBurst < 5000;
+        this.startTime = startTime;
     }
 
     public long getElapsedCPUTime() {
@@ -26,8 +27,8 @@ public class Process {
         return elapsedIOTime;
     }
 
-    public long getElapsedQueueTime() {
-        return elapsedQueueTime;
+    public long getElapsedQueueTime(long endTime) {
+        return endTime - startTime - elapsedIOTime - elapsedCPUTime;
     }
 
     public int getIoRequests() {
