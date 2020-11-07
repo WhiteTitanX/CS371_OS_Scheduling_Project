@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args){
         if(DEBUG_LEVEL == 0){
             try{
-                fr = new FileWriter("log.txt", true);
+                fr = new FileWriter("log.txt", false);
                 br = new BufferedWriter(fr);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -113,8 +113,6 @@ public class Main {
                     long remainingBurst = currentProcess.getRemainingCPUBurst();
                     long remainingTime = currentProcess.getRemainingCPUTime();
 
-                    debug("PRE", null, "PRE " + timeSpent + " ; " + remainingBurst + " ; " + remainingTime, simulatorTime);
-
                     if(remainingBurst > quantum_size && remainingTime > quantum_size){
                         remainingBurst -= quantum_size;
                         remainingTime -= quantum_size;
@@ -131,11 +129,10 @@ public class Main {
                         }
                     }
 
-                    debug("POST", null, "POST " + timeSpent + " ; " + remainingBurst + " ; " + remainingTime, simulatorTime);
-
                     currentProcess.setRemainingCPUBurst(remainingBurst);
                     currentProcess.setRemainingCPUTime(remainingTime);
                     currentProcess.setElapsedCPUTime(currentProcess.getElapsedCPUTime() + timeSpent);
+
                     if(currentProcess.getRemainingCPUTime() <= 0)
                         eventQueue.add(new Event("PROCESS_DONE", simulatorTime + context_switch_time + timeSpent));
                     else if (currentProcess.getRemainingCPUBurst() <= 0)
