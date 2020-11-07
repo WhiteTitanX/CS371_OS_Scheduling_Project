@@ -1,31 +1,32 @@
 public class Process {
 
-    private int remainingCPUTime;
-    private int remainingCPUBurst;
-    private int elapsedCPUTime;
-    private int elapsedIOTime;
-    private int elapsedQueueTime;
+    private long remainingCPUTime;
+    private long remainingCPUBurst;
+    private long elapsedCPUTime;
+    private long elapsedIOTime;
+    private long elapsedQueueTime;
     private int ioRequests;
 
     private final int pid;
     private final boolean ioBound;
+    private long startTime;
 
-    public Process(int pid, int remainingCPUTime, int remainingCPUBurst) {
+    public Process(int pid, long remainingCPUTime, int remainingCPUBurst) {
         this.pid = pid;
         this.remainingCPUTime = remainingCPUTime;
         this.remainingCPUBurst = remainingCPUBurst;
         this.ioBound = remainingCPUBurst < 5000;
     }
 
-    public int getElapsedCPUTime() {
+    public long getElapsedCPUTime() {
         return elapsedCPUTime;
     }
 
-    public int getElapsedIOTime() {
+    public long getElapsedIOTime() {
         return elapsedIOTime;
     }
 
-    public int getElapsedQueueTime() {
+    public long getElapsedQueueTime() {
         return elapsedQueueTime;
     }
 
@@ -37,11 +38,11 @@ public class Process {
         return pid;
     }
 
-    public int getRemainingCPUTime() {
+    public long getRemainingCPUTime() {
         return remainingCPUTime;
     }
 
-    public int getRemainingCPUBurst() {
+    public long getRemainingCPUBurst() {
         return remainingCPUBurst;
     }
 
@@ -49,23 +50,23 @@ public class Process {
         return ioBound;
     }
 
-    public void setRemainingCPUTime(int remainingCPUTime) {
+    public void setRemainingCPUTime(long remainingCPUTime) {
         this.remainingCPUTime = remainingCPUTime;
     }
 
-    public void setRemainingCPUBurst(int remainingCPUBurst) {
+    public void setRemainingCPUBurst(long remainingCPUBurst) {
         this.remainingCPUBurst = remainingCPUBurst;
     }
 
-    public void setElapsedCPUTime(int elapsedCPUTime) {
+    public void setElapsedCPUTime(long elapsedCPUTime) {
         this.elapsedCPUTime = elapsedCPUTime;
     }
 
-    public void setElapsedIOTime(int elapsedIOTime) {
+    public void setElapsedIOTime(long elapsedIOTime) {
         this.elapsedIOTime = elapsedIOTime;
     }
 
-    public void setElapsedQueueTime(int elapsedQueueTime) {
+    public void setElapsedQueueTime(long elapsedQueueTime) {
         this.elapsedQueueTime = elapsedQueueTime;
     }
 
