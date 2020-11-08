@@ -5,6 +5,7 @@ public class Process {
     private long elapsedCPUTime;
     private long elapsedIOTime;
     private long elapsedQueueTime;
+    private long totalTime;
     private int ioRequests;
 
     private final int pid;
@@ -30,7 +31,10 @@ public class Process {
         return elapsedIOTime;
     }
 
+    public long getTotalTime(){ return totalTime; }
+
     public long getElapsedQueueTime(long endTime) {
+        totalTime = endTime - startTime;
         elapsedQueueTime = endTime - startTime - elapsedIOTime - elapsedCPUTime;
         return endTime - startTime - elapsedIOTime - elapsedCPUTime;
     }

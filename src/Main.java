@@ -199,19 +199,22 @@ public class Main {
 
         System.out.println("\nTotal Number of processes completed: " + completedProcesses.size());
         int ioProcesses = 0;
-        long cpuTime = 0, readyWait = 0;
+        long cpuTime = 0, readyWait = 0, turnaround = 0;
         for (Process p : completedProcesses) {
             if (p.isIoBound())
                 ++ioProcesses;
             cpuTime += p.getElapsedCPUTime();
             readyWait += p.getElapsedQueueTime();
+            turnaround += p.getTotalTime();
         }
         System.out.println("Ratio of IO-Bound Completed: " + Math.round((double)ioProcesses/completedProcesses.size()*100.0) + "%");
         System.out.println("Average CPU Time: " + cpuTime/completedProcesses.size()/1000000.0 + " seconds");
         System.out.println("Average Ready Waiting Time: " + readyWait/completedProcesses.size()/1000000.0 + " seconds");
+        System.out.println("Average Turnaround Time: " + turnaround/completedProcesses.size()/1000000.0 + " seconds");
 
         cpuTime = 0;
         readyWait = 0;
+        turnaround = 0;
         long ioWait = 0;
         int io = 0;
         for (Process p : completedProcesses) {
@@ -220,17 +223,20 @@ public class Main {
                 readyWait += p.getElapsedQueueTime();
                 ioWait += p.getElapsedIOTime();
                 io += p.getIoRequests();
+                turnaround += p.getTotalTime();
             }
         }
         System.out.println("\nNumber of IO-bounded processes completed: " + ioProcesses);
         System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
         System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
         System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average Turnaround Time: " + turnaround/ioProcesses/1000000.0 + " seconds");
         System.out.println("Average I/O Operations per process: " + io/ioProcesses);
 
 
         cpuTime = 0;
         readyWait = 0;
+        turnaround = 0;
         ioWait = 0;
         io = 0;
         for (Process p : completedProcesses) {
@@ -239,12 +245,14 @@ public class Main {
                 readyWait += p.getElapsedQueueTime();
                 ioWait += p.getElapsedIOTime();
                 io += p.getIoRequests();
+                turnaround += p.getTotalTime();
             }
         }
         System.out.println("\nNumber of CPU-bounded processes completed: " + Math.abs(completedProcesses.size() - ioProcesses));
         System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
         System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
         System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+        System.out.println("Average Turnaround Time: " + turnaround/Math.abs(completedProcesses.size() - ioProcesses)/1000000.0 + " seconds");
         System.out.println("Average I/O Operations per process: " + io/ioProcesses);
 
 
