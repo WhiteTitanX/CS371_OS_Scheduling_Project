@@ -6,7 +6,7 @@ public class Main {
     private static Random r;
     private static FileWriter fr;
     private static BufferedWriter br;
-    private static final int DEBUG_LEVEL = 0;
+    private static final int DEBUG_LEVEL = 1;
 
     public static void main(String[] args){
         if(DEBUG_LEVEL == 0){
@@ -19,7 +19,7 @@ public class Main {
         }
 
         r = new Random();
-        int total_simulation_time = 0; // in seconds
+        long total_simulation_time = 0; // in seconds
         int quantum_size = 0; // in microseconds
         int context_switch_time = 0; // in microseconds
         int avg_process_length = 0; // in microseconds
@@ -28,7 +28,7 @@ public class Main {
         int avg_io_interrupt = 0; // microseconds
 
         try{
-            FileReader fr = new FileReader("params1.txt");
+            FileReader fr = new FileReader("params3.txt");
             BufferedReader br = new BufferedReader(fr);
             String line;
             int counter = 0;
@@ -37,7 +37,7 @@ public class Main {
                 if(!line.startsWith("#")){
                     int part = Integer.parseInt(line.split(" ")[0]);
                     switch (counter) {
-                        case 0 -> total_simulation_time = part * 1000000;
+                        case 0 -> total_simulation_time = (long) part * 1000000;
                         case 1 -> quantum_size = part;
                         case 2 -> context_switch_time = part;
                         case 3 -> avg_process_length = part;
@@ -76,6 +76,8 @@ public class Main {
 
         eventQueue.add(new Event("NEW_PROCESS", 0));
 
+        int checing = 50000 * 1000000;
+        System.out.println("hello " + checing);
         while(simulatorTime < total_simulation_time && eventQueue.peek() != null){
             Event currentEvent = eventQueue.poll();
             simulatorTime = currentEvent.getTime();
@@ -188,6 +190,7 @@ public class Main {
             }
         }
 
+        //Statistics Start
         System.out.println("Finished Simulation!\n\nStatistics:");
         System.out.println("Simulation Time: " + simulatorTime/1000000.0 + " seconds");
         System.out.println("Created " + pid + " processes");
@@ -197,6 +200,7 @@ public class Main {
         System.out.println("Total Time in Context Switches: " +
                 contextSwitches*context_switch_time/1000000.0 + " seconds"); // NEED TO CHECK THIS
 
+        //Overall Stats
         System.out.println("\nTotal Number of processes completed: " + completedProcesses.size());
         int ioProcesses = 0;
         long cpuTime = 0, readyWait = 0, turnaround = 0;
@@ -226,12 +230,23 @@ public class Main {
                 turnaround += p.getTotalTime();
             }
         }
-        System.out.println("\nNumber of IO-bounded processes completed: " + ioProcesses);
-        System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average Turnaround Time: " + turnaround/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+        //IO Statistics
+        if (ioProcesses != 0) {
+            System.out.println("\nNumber of IO-bounded processes completed: " + ioProcesses);
+            System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average Turnaround Time: " + turnaround/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+        } else {
+            System.out.println("\nNumber of IO-bounded processes completed: 0");
+            System.out.println("Average CPU Time: 0 seconds");
+            System.out.println("Average Ready Waiting Time: 0 seconds");
+            System.out.println("Average I/O Interrupt Time: 0 seconds");
+            System.out.println("Average Turnaround Time: 0 seconds");
+            System.out.println("Average I/O Operations per process: 0");
+        }
+        
 
 
         cpuTime = 0;
@@ -248,12 +263,23 @@ public class Main {
                 turnaround += p.getTotalTime();
             }
         }
+
+        //CPU Statistics
         System.out.println("\nNumber of CPU-bounded processes completed: " + Math.abs(completedProcesses.size() - ioProcesses));
-        System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
-        System.out.println("Average Turnaround Time: " + turnaround/Math.abs(completedProcesses.size() - ioProcesses)/1000000.0 + " seconds");
-        System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+        if (ioProcesses != 0) {
+            System.out.println("Average CPU Time: " + cpuTime/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average Ready Waiting Time: " + readyWait/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average I/O Interrupt Time: " + ioWait/ioProcesses/1000000.0 + " seconds");
+            System.out.println("Average Turnaround Time: " + turnaround/Math.abs(completedProcesses.size() - ioProcesses)/1000000.0 + " seconds");
+            System.out.println("Average I/O Operations per process: " + io/ioProcesses);
+        } else {
+            System.out.println("Average CPU Time: " + cpuTime/1000000.0 + " seconds");
+            System.out.println("Average Ready Waiting Time: " + readyWait/1000000.0 + " seconds");
+            System.out.println("Average I/O Interrupt Time: " + ioWait/1000000.0 + " seconds");
+            System.out.println("Average Turnaround Time: " + turnaround/Math.abs(completedProcesses.size() - ioProcesses)/1000000.0 + " seconds");
+            System.out.println("Average I/O Operations per process: 0");
+        }
+        
 
 
         System.out.println("\nFinished Statistics Section!\nEnd of program");

@@ -1,0 +1,8 @@
+# 20% I/O-bound, 1 sec per proc, 2 sec btwn proc, small quantum, really quick I/O
+50000 totalSimulationTime
+20000   quantum
+100    contextSwitchTime
+1000000 averageProcessLength
+2000000 averageCreationTime
+20    IOBoundPct
+1000   averageIOserviceTime
