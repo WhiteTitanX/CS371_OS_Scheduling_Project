@@ -76,8 +76,6 @@ public class Main {
 
         eventQueue.add(new Event("NEW_PROCESS", 0));
 
-        int checing = 50000 * 1000000;
-        System.out.println("hello " + checing);
         while(simulatorTime < total_simulation_time && eventQueue.peek() != null){
             Event currentEvent = eventQueue.poll();
             simulatorTime = currentEvent.getTime();
