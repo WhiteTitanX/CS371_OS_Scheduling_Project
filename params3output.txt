@@ -1,0 +1,26 @@
+Statistics:
+Simulation Time: 50001.059633 seconds
+Created 24544 processes
+Average CPU Time: 0.993108 seconds
+CPU Utilization: 49% (24374.843566 seconds)
+Total Time in Context Switches: 453.3849 seconds
+
+Total Number of processes completed: 24543
+Ratio of IO-Bound Completed: 19%
+Average CPU Time: 0.993137 seconds
+Average Ready Waiting Time: 1.577127 seconds
+Average Turnaround Time: 2.752894 seconds
+
+Number of IO-bounded processes completed: 4700
+Average CPU Time: 1.017998 seconds
+Average Ready Waiting Time: 3.987228 seconds
+Average I/O Interrupt Time: 0.678094 seconds
+Average Turnaround Time: 5.68332 seconds
+Average I/O Operations per process: 678
+
+Number of CPU-bounded processes completed: 19843
+Average CPU Time: 4.168079 seconds
+Average Ready Waiting Time: 4.248395 seconds
+Average I/O Interrupt Time: 0.275584 seconds
+Average Turnaround Time: 2.058795 seconds
+Average I/O Operations per process: 275
